@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthPayloadDto } from './dto/auth.dto';
 import { AuthService } from './auth.service';
 import { LocalGuard } from './guards/local.guard';
@@ -19,6 +19,9 @@ export class AuthController {
     @Get('status') 
     @UseGuards(JwtAuthGuard) // Request example that validates user session
     status(@Req() req: Request){
-        return req.user
+        return {
+            statusCode: HttpStatus.OK,
+            user: req.user
+        }
     }  
 }

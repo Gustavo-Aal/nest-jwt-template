@@ -1,35 +1,33 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthPayloadDto } from './dto/auth.dto';
 import { JwtService } from '@nestjs/jwt';
-
-const fakeUsers = [
-    {
-        id: 1,
-        username: 'gustavo',
-        password: 'password'
-    },
-    {
-        id: 2,
-        username: 'felipe',
-        password: 'password'
-    },
-]
+import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt'
 
 
 @Injectable()
 export class AuthService {
 
-    constructor(private jwtService: JwtService){
+    constructor(private jwtService: JwtService){}
 
-    }
+    async validateUser({username, password}: AuthPayloadDto){
 
-    validateUser({username, password}: AuthPayloadDto){
-        const findUser = fakeUsers.find((user)=> user.username === username )
+        const prisma = new PrismaClient();
+
+        const findUser = await prisma.user.findUnique({
+            where: {
+                username: username
+            }
+        })
+
         if(!findUser) return null;
 
-        if(password === findUser.password){
+        if(await bcrypt.compare(password, findUser.password)){
             const {password, ...user } = findUser;
-            return this.jwtService.sign(user); // create a JWT
+            return {
+                token: this.jwtService.sign(user),
+                statusCode: HttpStatus.OK
+            }; // create a JWT
         }
     }   
 }
